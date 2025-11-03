@@ -3,6 +3,7 @@ import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Mi
 import { GoodSpec } from './good-spec.entity';
 import { GoodSku } from './good-sku.entity';
 import { GoodTag } from './good-tag.entity';
+import { Image } from './image.entity';
 
 @Entity('goods')
 export class Good {
@@ -30,15 +31,14 @@ export class Good {
   @IsString()
   primaryImage?: string;
 
-  @Column('simple-array', { nullable: true }) // 存储为逗号分隔的字符串
-  @IsOptional()
-  @IsArray()
-  images?: string[];
-
   @Column({ type: 'varchar', length: 500, nullable: true })
   @IsOptional()
   @IsString()
   video?: string;
+
+  @IsOptional()
+  @IsArray()
+  images?: string[];  // 保留原始的images字段，类型为string[]
 
   @Column({ type: 'int', default: 1 })
   @IsNumber()
@@ -86,10 +86,9 @@ export class Good {
   @IsArray()
   categoryIds?: string[];
 
-  @Column({ type: 'text', nullable: true })
   @IsOptional()
   @IsString()
-  desc?: string;
+  desc?: string[];
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   @IsOptional()

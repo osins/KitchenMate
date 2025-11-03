@@ -56,4 +56,28 @@ export class GoodController {
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return await this.goodService.remove(id);
   }
+
+  @Get('list')
+  async fetchGoodsList(
+    @Query('pageIndex') pageIndex: string = '0',
+    @Query('pageSize') pageSize: string = '20',
+  ): Promise<{
+    code: number;
+    data: {
+      goodsList: any[];
+      hasMore: boolean;
+      total: number;
+    };
+    message: string;
+  }> {
+    const parsedPageIndex = Math.abs(parseInt(pageIndex, 10)) || 0;
+    const parsedPageSize = parseInt(pageSize, 10) || 20;
+    
+    const result = await this.goodService.fetchGoodsList(parsedPageIndex, parsedPageSize);
+    return {
+      code: 200,
+      data: result,
+      message: 'success'
+    };
+  }
 }

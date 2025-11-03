@@ -2,6 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, IsArray } from 'class-validator';
 import { Good } from './good.entity';
 import { GoodSkuSpec } from './good-sku-spec.entity';
+import { PriceInfo } from './price-info.entity';
 
 @Entity('good_skus')
 export class GoodSku {
@@ -55,4 +56,7 @@ export class GoodSku {
 
   @OneToMany(() => GoodSkuSpec, skuSpec => skuSpec.sku)
   skuSpecs: GoodSkuSpec[];
+
+  @OneToMany(() => PriceInfo, priceInfo => priceInfo.sku)
+  priceInfos: PriceInfo[];
 }

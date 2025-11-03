@@ -6,6 +6,8 @@ import { GoodSpecValue } from '../models/good-spec-value.entity';
 import { GoodSku } from '../models/good-sku.entity';
 import { GoodSkuSpec } from '../models/good-sku-spec.entity';
 import { GoodTag } from '../models/good-tag.entity';
+import { PriceInfo } from '../models/price-info.entity';
+import { Image } from '../models/image.entity';
 import { GoodService } from './good.service';
 import { GoodController } from './good.controller';
 
@@ -17,7 +19,9 @@ import { GoodController } from './good.controller';
       GoodSpecValue,
       GoodSku,
       GoodSkuSpec,
-      GoodTag
+      GoodTag,
+      PriceInfo,
+      Image
     ])
   ],
   providers: [GoodService],

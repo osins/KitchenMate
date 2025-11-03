@@ -23,8 +23,6 @@ import { CategoryModule } from './category/category.module';
       synchronize: process.env.NODE_ENV !== 'production', // 在生产环境中不要使用 synchronize
       logging: process.env.NODE_ENV !== 'production',
       poolSize: parseInt(process.env.DB_CONNECTION_LIMIT || '5', 10), // 阿里云RDS连接数限制
-      acquireTimeout: 60000,
-      connectTimeout: 60000,
     }),
     GoodModule,
     CategoryModule,
