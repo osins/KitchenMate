@@ -1,12 +1,18 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max, IsArray } from 'class-validator';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 
 @Entity('categories')
 export class Category {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
+  id: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH ,nullable: true })
+  @IsOptional()
+  @IsString()
+  parentId: string;
+
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
   @IsString()
   groupId: string;
 
@@ -18,12 +24,6 @@ export class Category {
   @IsOptional()
   @IsString()
   thumbnail: string;
-
-  @Column({ type: 'int', nullable: true })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  parentId: number;
 
   @Column({ type: 'boolean', default: true })
   @IsOptional()

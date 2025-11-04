@@ -1,13 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString } from 'class-validator';
 import { Good } from './good.entity';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 
 @Entity('good_tags')
 export class GoodTag {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
+  id: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
   @IsString()
   tagId: string;
 
@@ -20,9 +21,9 @@ export class GoodTag {
   @IsString()
   image: string;
 
-  @Column({ type: 'int' })
-  @IsNumber()
-  goodId: number;
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  @IsString()
+  goodId: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   @IsDateString()

@@ -1,15 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max } from 'class-validator';
 import { GoodSku } from './good-sku.entity';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 
 @Entity('good_sku_prices')
 export class GoodSkuPrice {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({type:'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  id: string;
 
-  @Column({ type: 'int' })
-  @IsNumber()
-  goodId: number;
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true })
+  @IsString()
+  goodId: string;
 
   @Column({ type: 'int' })
   @IsNumber()
@@ -25,10 +26,10 @@ export class GoodSkuPrice {
   @IsString()
   priceTypeName?: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'varchar',length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true })
   @IsOptional()
-  @IsNumber()
-  skuId: number;
+  @IsString()
+  skuId: string;
 
   // 关联SKU
   @ManyToOne(() => GoodSku, sku => sku.priceInfo)

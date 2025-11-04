@@ -1,30 +1,31 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max, IsArray } from 'class-validator';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 import { GoodSpec } from './good-spec.entity';
 import { GoodSku } from './good-sku.entity';
 
 @Entity('good_spec_values')
 export class GoodSpecValue {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
+  id: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   @IsOptional()
   @IsString()
   saasId: string;
 
-  @Column({ type: 'int'})
-  @IsNumber()
-  goodId: number;
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  @IsString()
+  goodId: string;
+  
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  @IsString()
+  skuId: string;
 
-  @Column({ type: 'int'})
-  @IsNumber()
-  skuId: number;
-
-  @Column({ type: 'varchar', length: 50})
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
   @IsOptional()
   @IsString()
-  specId: number;
+  specId: string;
 
   @Column({ type: 'varchar', length: 50 , unique: true })
   @IsString()
@@ -38,10 +39,6 @@ export class GoodSpecValue {
   @IsOptional()
   @IsString()
   image: string;
-
-  @Column({ type: 'int' })
-  @IsNumber()
-  specIdNumber: number; // 关联到 GoodSpec 表
 
   @CreateDateColumn({ type: 'timestamp' })
   @IsDateString()

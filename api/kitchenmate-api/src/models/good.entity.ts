@@ -1,24 +1,25 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max, IsArray } from 'class-validator';
 import { GoodSpec } from './good-spec.entity';
 import { GoodSku } from './good-sku.entity';
 import { GoodTag } from './good-tag.entity';
 import { Image } from './image.entity';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 
 @Entity('goods')
 export class Good {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({type:'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  id: string;
 
-  @Column({ type: 'varchar', length: 255, default: '88888888' })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, default: '88888888' })
   @IsString()
   saasId: string;
 
-  @Column({ type: 'varchar', length: 50, default: '1000' })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, default: '1000' })
   @IsString()
   storeId: string;
 
-  @Column({ type: 'varchar', length: 50, default: '0' })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, default: '0' })
   @IsString()
   spuId: string;
 

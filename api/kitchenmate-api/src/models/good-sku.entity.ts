@@ -1,14 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, IsArray } from 'class-validator';
+import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { IsString, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
 import { Good } from './good.entity';
 import { GoodSkuPrice } from './good-sku-price-info.entity';
 import { GoodSkuStock } from './good-sku-stock.entity';
 import { GoodSpecValue } from './good-spec-value.entity';
+import { DEFAULT_SNOWFLAKE_ID_LENGTH } from 'src/common/snowflake/snowflake.service';
 
 @Entity('good_skus')
 export class GoodSku {
-  @PrimaryGeneratedColumn('increment')
-  id: number;
+  @PrimaryColumn({type:'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  id: string;
 
   @Column({ type: 'varchar', length: 50 })
   @IsString()
@@ -44,9 +45,9 @@ export class GoodSku {
   @Min(0)
   soldQuantity: number;
 
-  @Column({ type: 'int' })
-  @IsNumber()
-  goodId: number;
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true})
+  @IsString()
+  goodId: string;
 
   @CreateDateColumn({ type: 'timestamp' })
   @IsDateString()
