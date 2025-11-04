@@ -1,26 +1,34 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, PrimaryColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max, IsArray } from 'class-validator';
 import { GoodSpec } from './good-spec.entity';
-import { GoodSkuSpec } from './good-sku-spec.entity';
+import { GoodSku } from './good-sku.entity';
 
 @Entity('good_spec_values')
 export class GoodSpecValue {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ type: 'varchar', length: 50 })
-  @IsString()
-  specValueId: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  @IsOptional()
-  @IsString()
-  specId: string;
-
   @Column({ type: 'varchar', length: 50, nullable: true })
   @IsOptional()
   @IsString()
   saasId: string;
+
+  @Column({ type: 'int'})
+  @IsNumber()
+  goodId: number;
+
+  @Column({ type: 'int'})
+  @IsNumber()
+  skuId: number;
+
+  @Column({ type: 'varchar', length: 50})
+  @IsOptional()
+  @IsString()
+  specId: number;
+
+  @Column({ type: 'varchar', length: 50 , unique: true })
+  @IsString()
+  specValueId: string;
 
   @Column({ type: 'varchar', length: 255 })
   @IsString()
@@ -43,10 +51,11 @@ export class GoodSpecValue {
   @IsDateString()
   updatedAt: Date;
 
-  @ManyToOne(() => GoodSpec, goodSpec => goodSpec.specValues)
-  @JoinColumn({ name: 'spec_id' })
+  @ManyToOne(() => GoodSpec, goodSpec => goodSpec.specValueList)
+  @JoinColumn({ name: 'specId' })
   spec: GoodSpec;
 
-  @OneToMany(() => GoodSkuSpec, skuSpec => skuSpec.specValue)
-  skuSpecs: GoodSkuSpec[];
+  @OneToMany(() => GoodSku, sku => sku.priceInfo)
+  @JoinColumn({ name: 'skuId', referencedColumnName: 'id'})
+  sku: GoodSku[];
 }

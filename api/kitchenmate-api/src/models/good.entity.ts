@@ -110,11 +110,11 @@ export class Good {
 
   // 关系
   @OneToMany(() => GoodSpec, goodSpec => goodSpec.good)
-  specs: GoodSpec[];
+  specList: GoodSpec[];
 
   @OneToMany(() => GoodSku, goodSku => goodSku.good)
-  skus: GoodSku[];
+  skuList: GoodSku[];
 
   @OneToMany(() => GoodTag, goodTag => goodTag.good)
-  tags: GoodTag[];
+  spuTagList: GoodTag[];
 }

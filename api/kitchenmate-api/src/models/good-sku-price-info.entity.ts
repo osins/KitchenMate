@@ -2,10 +2,14 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, Max } from 'class-validator';
 import { GoodSku } from './good-sku.entity';
 
-@Entity('price_infos')
-export class PriceInfo {
+@Entity('good_sku_prices')
+export class GoodSkuPrice {
   @PrimaryGeneratedColumn('increment')
   id: number;
+
+  @Column({ type: 'int' })
+  @IsNumber()
+  goodId: number;
 
   @Column({ type: 'int' })
   @IsNumber()
@@ -27,7 +31,7 @@ export class PriceInfo {
   skuId: number;
 
   // 关联SKU
-  @ManyToOne(() => GoodSku, sku => sku.priceInfos)
-  @JoinColumn({ name: 'sku_id' })
+  @ManyToOne(() => GoodSku, sku => sku.priceInfo)
+  @JoinColumn({ name: 'skuId' })
   sku: GoodSku;
 }

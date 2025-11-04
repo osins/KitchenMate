@@ -1,8 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { IsString, IsNumber, IsPositive, IsOptional, IsBoolean, IsDateString, Min, IsArray } from 'class-validator';
 import { Good } from './good.entity';
-import { GoodSkuSpec } from './good-sku-spec.entity';
-import { PriceInfo } from './price-info.entity';
+import { GoodSkuPrice } from './good-sku-price-info.entity';
+import { GoodSkuStock } from './good-sku-stock.entity';
+import { GoodSpecValue } from './good-spec-value.entity';
 
 @Entity('good_skus')
 export class GoodSku {
@@ -36,6 +37,11 @@ export class GoodSku {
   @Column({ type: 'int', default: 0 })
   @IsNumber()
   @Min(0)
+  safeStockQuantity: number;
+
+  @Column({ type: 'int', default: 0 })
+  @IsNumber()
+  @Min(0)
   soldQuantity: number;
 
   @Column({ type: 'int' })
@@ -50,13 +56,15 @@ export class GoodSku {
   @IsDateString()
   updatedAt: Date;
 
-  @ManyToOne(() => Good, good => good.skus)
-  @JoinColumn({ name: 'good_id' })
+  @ManyToOne(() => Good, good => good.skuList)
+  @JoinColumn({ name: 'goodId' })
   good: Good;
 
-  @OneToMany(() => GoodSkuSpec, skuSpec => skuSpec.sku)
-  skuSpecs: GoodSkuSpec[];
+  @OneToMany(() => GoodSpecValue, skuSpec => skuSpec.sku)
+  specInfo: GoodSpecValue[];
 
-  @OneToMany(() => PriceInfo, priceInfo => priceInfo.sku)
-  priceInfos: PriceInfo[];
+  @OneToMany(() => GoodSkuPrice, priceInfo => priceInfo.sku)
+  priceInfo: GoodSkuPrice[];
+
+  stockInfo: GoodSkuStock;
 }

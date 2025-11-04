@@ -5,10 +5,16 @@ import { Good } from '../models/good.entity';
 import { GoodSpec } from '../models/good-spec.entity';
 import { GoodSpecValue } from '../models/good-spec-value.entity';
 import { GoodSku } from '../models/good-sku.entity';
-import { GoodSkuSpec } from '../models/good-sku-spec.entity';
 import { GoodTag } from '../models/good-tag.entity';
-import { PriceInfo } from '../models/price-info.entity';
+import { GoodSkuPrice } from '../models/good-sku-price-info.entity';
 import { Image } from '../models/image.entity';
+import {
+  execute,
+  executeOneWithRunner,
+  executeSaveObjectWithRunner,
+  executeWithMap,
+  executeWithRunner as executeWithQueryRunner,
+} from 'src/common/sync.utils';
 
 @Injectable()
 export class GoodService {
@@ -21,8 +27,6 @@ export class GoodService {
     private goodSpecValueRepository: Repository<GoodSpecValue>,
     @InjectRepository(GoodSku)
     private goodSkuRepository: Repository<GoodSku>,
-    @InjectRepository(GoodSkuSpec)
-    private goodSkuSpecRepository: Repository<GoodSkuSpec>,
     @InjectRepository(GoodTag)
     private goodTagRepository: Repository<GoodTag>,
     @InjectRepository(Image)
@@ -44,35 +48,37 @@ export class GoodService {
       };
 
       // 创建商品，使用前端模型字段
-      const good = queryRunner.manager.create(Good, processedData);
-      const savedGood = await queryRunner.manager.save(Good, good);
+      const savedGood = await executeSaveObjectWithRunner(queryRunner, Good, processedData);
 
       // 如果有规格信息，则创建规格
-      if (data['specList']) {
-        for (const spec of data['specList']) {
-          const goodSpec = queryRunner.manager.create(GoodSpec, {
+      await executeWithMap(data['specList'], async (spec) => {
+        const savedSpec = await executeSaveObjectWithRunner(
+          queryRunner,
+          GoodSpec,
+          {
             specId: spec.specId,
             title: spec.title,
             goodId: savedGood.id,
-          });
-          const savedSpec = await queryRunner.manager.save(GoodSpec, goodSpec);
+          },
+        );
 
-          // 为规格创建规格值
-          if (spec.specValueList) {
-            for (const specValue of spec.specValueList) {
-              const goodSpecValue = queryRunner.manager.create(GoodSpecValue, {
-                specValueId: specValue.specValueId,
-                specId: specValue.specId,
-                saasId: specValue.saasId,
-                specValue: specValue.specValue,
-                image: specValue.image,
-                specIdNumber: savedSpec.id,
-              });
-              await queryRunner.manager.save(GoodSpecValue, goodSpecValue);
-            }
-          }
-        }
-      }
+        // 为规格创建规格值
+        await executeWithQueryRunner(
+          spec.specValueList,
+          queryRunner,
+          GoodSpecValue,
+          (value) => ({
+            specValueId: value.specValueId,
+            specId: value.specId,
+            saasId: value.saasId,
+            specValue: value.specValue,
+            image: value.image,
+            specIdNumber: savedSpec.id,
+          }),
+        );
+
+        return savedSpec;
+      });
 
       // 如果有SKU信息，则创建SKU
       if (data['skuList']) {
@@ -93,82 +99,98 @@ export class GoodService {
             }
           }
 
-          const goodSku = queryRunner.manager.create(GoodSku, {
-            skuId: sku.skuId,
-            skuImage: sku.skuImage,
-            price: price,
-            originalPrice: originalPrice,
-            stockQuantity: sku.stockInfo?.stockQuantity || 0,
-            soldQuantity: sku.stockInfo?.soldQuantity || 0,
-            goodId: savedGood.id,
-          });
-          const savedSku = await queryRunner.manager.save(GoodSku, goodSku);
+          const savedSku = await executeSaveObjectWithRunner(
+            queryRunner,
+            GoodSku,
+            {
+              skuId: sku.skuId,
+              skuImage: sku.skuImage,
+              price: price,
+              originalPrice: originalPrice,
+              stockQuantity: sku.stockInfo?.stockQuantity || 0,
+              soldQuantity: sku.stockInfo?.soldQuantity || 0,
+              goodId: savedGood.id,
+            },
+          );
 
-          // 为SKU创建价格信息
-          if (sku.priceInfo && Array.isArray(sku.priceInfo)) {
-            sku.priceInfo.forEach((item) => {
-              const priceInfo = queryRunner.manager.create(PriceInfo, {
-                priceType: item.priceType,
-                price: item.price,
-                priceTypeName: item.priceTypeName,
+          if (savedSku !== undefined && savedSku !== null) {
+            // 为SKU创建价格信息
+            await executeWithQueryRunner(
+              sku.priceInfo,
+              queryRunner,
+              GoodSkuPrice,
+              (price) => ({
+                priceType: price.priceType,
+                price: price.price,
+                priceTypeName: price.priceTypeName,
                 skuId: savedSku.id,
-              });
-              queryRunner.manager.save(PriceInfo, priceInfo);
-            });
-          }
+                goodId: savedGood.id,
+              }),
+            );
 
-          // 为SKU创建规格关联
-          if (sku.specInfo) {
-            for (const specInfo of sku.specInfo) {
-              const skuSpec = queryRunner.manager.create(GoodSkuSpec, {
-                skuId: savedSku.id,
-                specId: specInfo.specId,
-                specValueId: specInfo.specValueId,
-              });
-              await queryRunner.manager.save(GoodSkuSpec, skuSpec);
-            }
+            // 为SKU创建规格关联
+            await executeWithQueryRunner(
+              sku.specInfo,
+              queryRunner,
+              GoodSpecValue,
+              (spec, i, records) => {
+              const specValue = executeSaveObjectWithRunner(queryRunner, GoodSpecValue, {
+                            goodId: savedGood.id,
+                            skuId: savedSku.id,
+                            specId: spec.specId,
+                            specValue: spec.specValue,
+                            specValueId: spec.specValueId,
+                          });
+
+                return {
+                  goodId: savedGood.id,
+                  skuId: savedSku.id,
+                  specId: spec.specId,
+                  specValue: spec.specValue,
+                  specValueId: spec.specValueId,
+              };
+              },
+            );
           }
         }
       }
 
       // 为商品创建图片记录
-      if (data['images'] && Array.isArray(data['images'])) {
-        data.images.forEach((url, i) => {
-          const image = queryRunner.manager.create(Image, {
+      await executeWithQueryRunner(
+        data.images,
+        queryRunner,
+        Image,
+        (url, i) => {
+          return {
             url: url,
             type: i === 0 ? 'primary' : 'gallery', // 第一张设为主图，其他为相册图
             subjectId: savedGood.id,
             sortOrder: i,
-          });
-          queryRunner.manager.save(Image, image);
-        });
-      }
+          };
+        },
+      );
 
       // 如果 desc 是数组，转换为 JSON 字符串
-      if (data['desc'] && Array.isArray(data['desc'])) {
-        data.desc.forEach((url, i) => {
-          const image = queryRunner.manager.create(Image, {
-            url: url,
-            type: 'desc', // 第一张设为主图，其他为相册图
-            subjectId: savedGood.id,
-            sortOrder: i,
-          });
-          queryRunner.manager.save(Image, image);
-        });
-      }
+      await executeWithQueryRunner(data.desc, queryRunner, Image, (url, i) => ({
+        url: url,
+        type: 'desc', // 第一张设为主图，其他为相册图
+        subjectId: savedGood.id,
+        sortOrder: i,
+      }));
 
       // 如果有标签信息，则创建标签
-      if (data['spuTagList']) {
-        for (const tag of data['spuTagList']) {
-          const goodTag = queryRunner.manager.create(GoodTag, {
-            tagId: tag.id,
-            title: tag.title,
-            image: tag.image,
-            goodId: savedGood.id,
-          });
-          await queryRunner.manager.save(GoodTag, goodTag);
-        }
-      }
+      console.log('spu tag list:', data['spuTagList']);
+      await executeWithQueryRunner(
+        data['spuTagList'],
+        queryRunner,
+        GoodTag,
+        (tag) => ({
+          tagId: tag.id.toString(),
+          title: tag.title,
+          image: tag.image,
+          goodId: savedGood.id,
+        }),
+      );
 
       await queryRunner.commitTransaction();
       return savedGood;
@@ -214,12 +236,43 @@ export class GoodService {
   async findOne(id: number): Promise<Good> {
     const good = await this.goodRepository.findOne({
       where: { id, isPutOnSale: 1 }, // 符合前端模型，只返回上架商品
-      relations: ['specs', 'specs.specValues', 'skus', 'tags'],
+      relations: ['specList', 'specList.specValues', 'skuList', 'spuTagList'],
     });
 
     if (!good) {
-throw new NotFoundException(`Good with ID ${id} not found`);
+      throw new NotFoundException(`Good with ID ${id} not found`);
     }
+
+    const skus = await this.goodSkuRepository.find({
+      where: {
+        goodId: good.id,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    good.skuList = await executeWithMap(skus, (async (sku:GoodSku) => {
+      sku.stockInfo = {
+        stockQuantity: sku.stockQuantity,
+        safeStockQuantity: sku.safeStockQuantity,
+        soldQuantity: sku.soldQuantity
+      }
+
+      const skuSpecs = await this.goodSpecValueRepository.find({
+        where: {
+          skuId: In(skus.map((sku) => sku.id)),
+        },
+        order: {
+          createdAt: 'ASC',
+        },
+      });
+      
+      return {
+        ...sku,
+        skuSpecs: skuSpecs,
+      }
+    }));
 
     // 从 image 表中查询 subjectId=goods.id && type in (primary,gallery) 的图片记录赋值给good.images
     const images = await this.imageRepository.find({
@@ -244,6 +297,26 @@ throw new NotFoundException(`Good with ID ${id} not found`);
       },
     });
     good.desc = descImages.map((img) => img.url);
+
+    // 从 good_tag 表中查询 goodId=goods.id 的标签记录赋值给good.tags
+    const tags = await this.goodTagRepository.find({
+      where: {
+        goodId: good.id,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    good.spuTagList = tags.map((tag) => ({
+      id: tag.id,
+      tagId: tag.tagId,
+      goodId: tag.goodId,
+      title: tag.title,
+      image: tag.image,
+      createdAt: tag.createdAt,
+      updatedAt: tag.updatedAt,
+    }));
 
     return good;
   }
@@ -276,7 +349,7 @@ throw new NotFoundException(`Good with ID ${id} not found`);
   async findGoodsByIds(ids: number[]): Promise<Good[]> {
     return await this.goodRepository.find({
       where: { id: In(ids), isPutOnSale: 1 },
-      relations: ['specs', 'specs.specValues', 'skus', 'tags'],
+      relations: ['specList', 'specList.specValues', 'skus', 'tags'],
     });
   }
 
@@ -323,9 +396,9 @@ throw new NotFoundException(`Good with ID ${id} not found`);
         categoryIds: good.categoryIds,
         desc: good.desc,
         // 注意：这里需要额外查询关联数据
-        specs: good['specs'] || [],
-        skus: good['skus'] || [],
-        spuTagList: good['tags'] || [],
+        specList: good['specList'] || [],
+        skuList: good['skuList'] || [],
+        spuTagList: good['spuTagList'] || [],
       };
     });
 

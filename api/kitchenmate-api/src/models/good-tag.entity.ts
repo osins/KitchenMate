@@ -32,7 +32,7 @@ export class GoodTag {
   @IsDateString()
   updatedAt: Date;
 
-  @ManyToOne(() => Good, good => good.tags)
+  @ManyToOne(() => Good, good => good.spuTagList)
   @JoinColumn({ name: 'good_id' })
-  good: Good;
+  good?: Good;
 }

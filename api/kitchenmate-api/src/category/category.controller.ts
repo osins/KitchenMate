@@ -12,85 +12,99 @@ import {
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { Category } from '../models/category.entity';
+import { Result } from '../models/result.entity';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  async create(@Body() createCategoryDto: any): Promise<Category | Category[]> {
+  async create(@Body() createCategoryDto: any): Promise<Result<Category | Category[]>> {
     if (createCategoryDto.groupId && createCategoryDto.name) {
       // 单个分类创建
-      return await this.categoryService.create(createCategoryDto);
+      const result = await this.categoryService.create(createCategoryDto);
+      return Result.success(result);
     } else {
       // 批量创建分类树结构
-      return await this.categoryService.createWithChildren(createCategoryDto);
+      const result = await this.categoryService.createWithChildren(createCategoryDto);
+      return Result.success(result);
     }
   }
 
   @Post('tree')
-  async createTree(@Body() createCategoryTreeDto: any[]): Promise<Category[]> {
-    return await this.categoryService.createWithChildren(createCategoryTreeDto);
+  async createTree(@Body() createCategoryTreeDto: any[]): Promise<Result<Category[]>> {
+    const result = await this.categoryService.createWithChildren(createCategoryTreeDto);
+    return Result.success(result);
   }
 
   @Get()
-  async findAll(): Promise<Category[]> {
-    return await this.categoryService.findAll();
+  async findAll(): Promise<Result<Category[]>> {
+    const result = await this.categoryService.findAll();
+    return Result.success(result);
   }
 
   @Get('tree')
-  async findTree(): Promise<Category[]> {
-    return await this.categoryService.findTree();
+  async findTree(): Promise<Result<Category[]>> {
+    const result = await this.categoryService.findTree();
+    return Result.success(result);
   }
 
   @Get('root')
-  async findRootCategories(): Promise<Category[]> {
-    return await this.categoryService.findRootCategories();
+  async findRootCategories(): Promise<Result<Category[]>> {
+    const result = await this.categoryService.findRootCategories();
+    return Result.success(result);
   }
 
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<Category> {
-    return await this.categoryService.findOne(id);
+  ): Promise<Result<Category>> {
+    const result = await this.categoryService.findOne(id);
+    return Result.success(result);
   }
 
   @Get('group/:groupId')
   async findByGroupId(
     @Param('groupId') groupId: string,
-  ): Promise<Category> {
-    return await this.categoryService.findByGroupId(groupId);
+  ): Promise<Result<Category>> {
+    const result = await this.categoryService.findByGroupId(groupId);
+    return Result.success(result);
   }
 
   @Get('parent/:parentId/children')
   async findChildrenByParentId(
     @Param('parentId', ParseIntPipe) parentId: number,
-  ): Promise<Category[]> {
-    return await this.categoryService.findChildrenByParentId(parentId);
+  ): Promise<Result<Category[]>> {
+    const result = await this.categoryService.findChildrenByParentId(parentId);
+    return Result.success(result);
   }
 
   @Get('parent/group/:parentGroupId/children')
   async findChildrenByParentGroupId(
     @Param('parentGroupId') parentGroupId: string,
-  ): Promise<Category[]> {
-    return await this.categoryService.findChildrenByParentGroupId(parentGroupId);
+  ): Promise<Result<Category[]>> {
+    const result = await this.categoryService.findChildrenByParentGroupId(parentGroupId);
+    return Result.success(result);
   }
 
   @Patch(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: Partial<Category>,
-  ): Promise<Category> {
-    return await this.categoryService.update(id, updateCategoryDto);
+  ): Promise<Result<Category>> {
+    const result = await this.categoryService.update(id, updateCategoryDto);
+    return Result.success(result);
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return await this.categoryService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<Result<void>> {
+    await this.categoryService.remove(id);
+    return Result.successVoid();
   }
 
   @Delete('group/:groupId')
-  async removeByGroupId(@Param('groupId') groupId: string): Promise<void> {
-    return await this.categoryService.removeByGroupId(groupId);
+  async removeByGroupId(@Param('groupId') groupId: string): Promise<Result<void>> {
+    await this.categoryService.removeByGroupId(groupId);
+    return Result.successVoid();
   }
 }
