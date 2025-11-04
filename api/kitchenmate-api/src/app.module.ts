@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GoodModule } from './good/good.module';
 import { CategoryModule } from './category/category.module';
+import { AuthModule } from './auth/auth.module';
 import { SnowflakeIdSubscriber } from './common/snowflake/snowflake-id.subscriber';
 import { SnowflakeModule } from './common/snowflake/snowflake.module';
 import { SnowflakeService } from './common/snowflake/snowflake.service';
@@ -30,6 +31,7 @@ import { SnowflakeService } from './common/snowflake/snowflake.service';
     }),
     GoodModule,
     CategoryModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

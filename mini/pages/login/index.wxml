@@ -1,0 +1,130 @@
+<view class="page">
+  <view class="login-container">
+    <view class="logo">
+      <image src="/images/logo.png" mode="aspectFit"></image>
+    </view>
+    <view class="title">欢迎来到KitchenMate</view>
+    <view class="subtitle">请选择登录方式</view>
+
+    <!-- 登录方式选择 -->
+    <view class="login-type" wx:if="{{!showPhoneLogin && !showPasswordLogin && !showRegister}}">
+      <button class="login-btn wechat-login" bindtap="wechatLogin">
+        微信快捷登录
+      </button>
+      <button class="login-btn phone-login" bindtap="showPhoneLoginView">
+        验证码登录
+      </button>
+      <button class="login-btn phone-login" bindtap="showPasswordLoginView">
+        密码登录
+      </button>
+      <button class="login-btn phone-login" bindtap="showRegisterView">
+        用户注册
+      </button>
+      <view class="agreement">
+        登录即同意《用户协议》和《隐私政策》
+      </view>
+    </view>
+
+    <!-- 手机号验证码登录 -->
+    <view wx:elif="{{showPhoneLogin}}">
+      <input 
+        class="mobile-input" 
+        type="number" 
+        placeholder="请输入手机号" 
+        maxlength="11"
+        value="{{mobile}}"
+        bindinput="onMobileInput"
+      />
+      
+      <view class="verification-section">
+        <input 
+          class="verification-input" 
+          type="number" 
+          placeholder="请输入验证码" 
+          maxlength="6"
+          value="{{verificationCode}}"
+          bindinput="onVerificationCodeInput"
+        />
+        <button 
+          class="send-code-btn {{countdown > 0 ? 'disabled' : ''}}" 
+          bindtap="sendVerificationCode"
+          disabled="{{countdown > 0}}"
+        >
+          {{countdown > 0 ? countdown + 's后重发' : '获取验证码'}}
+        </button>
+      </view>
+
+      <button class="login-btn wechat-login" bindtap="phoneLogin">
+        登录
+      </button>
+
+      <button class="back-btn" bindtap="showLoginView">
+        返回
+      </button>
+    </view>
+
+    <!-- 密码登录 -->
+    <view wx:elif="{{showPasswordLogin}}">
+      <input 
+        class="mobile-input" 
+        type="number" 
+        placeholder="请输入手机号" 
+        maxlength="11"
+        value="{{mobile}}"
+        bindinput="onMobileInput"
+      />
+      
+      <input 
+        class="mobile-input" 
+        type="password" 
+        placeholder="请输入密码" 
+        value="{{password}}"
+        bindinput="onPasswordInput"
+      />
+
+      <button class="login-btn wechat-login" bindtap="passwordLogin">
+        登录
+      </button>
+
+      <button class="back-btn" bindtap="showLoginView">
+        返回
+      </button>
+    </view>
+
+    <!-- 用户注册 -->
+    <view wx:elif="{{showRegister}}">
+      <input 
+        class="mobile-input" 
+        type="number" 
+        placeholder="请输入手机号" 
+        maxlength="11"
+        value="{{mobile}}"
+        bindinput="onMobileInput"
+      />
+      
+      <input 
+        class="mobile-input" 
+        type="text" 
+        placeholder="请输入昵称" 
+        value="{{nickname}}"
+        bindinput="onNicknameInput"
+      />
+      
+      <input 
+        class="mobile-input" 
+        type="password" 
+        placeholder="请输入密码" 
+        value="{{password}}"
+        bindinput="onPasswordInput"
+      />
+
+      <button class="login-btn wechat-login" bindtap="register">
+        注册
+      </button>
+
+      <button class="back-btn" bindtap="showLoginView">
+        返回
+      </button>
+    </view>
+  </view>
+</view>
