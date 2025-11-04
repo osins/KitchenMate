@@ -57,7 +57,7 @@ export class CategoryController {
 
   @Get(':id')
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
   ): Promise<Result<Category>> {
     const result = await this.categoryService.findOne(id);
     return Result.success(result);
@@ -73,7 +73,7 @@ export class CategoryController {
 
   @Get('parent/:parentId/children')
   async findChildrenByParentId(
-    @Param('parentId', ParseIntPipe) parentId: number,
+    @Param('parentId') parentId: string,
   ): Promise<Result<Category[]>> {
     const result = await this.categoryService.findChildrenByParentId(parentId);
     return Result.success(result);
@@ -89,7 +89,7 @@ export class CategoryController {
 
   @Patch(':id')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateCategoryDto: Partial<Category>,
   ): Promise<Result<Category>> {
     const result = await this.categoryService.update(id, updateCategoryDto);
@@ -97,7 +97,7 @@ export class CategoryController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<Result<void>> {
+  async remove(@Param('id') id: string): Promise<Result<void>> {
     await this.categoryService.remove(id);
     return Result.successVoid();
   }

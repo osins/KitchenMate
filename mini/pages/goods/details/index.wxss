@@ -159,6 +159,17 @@ page {
   overflow: hidden;
 }
 
+.spu-tag-list{
+  height: 80rpx;
+  margin-top: 20rpx;
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  font-size: 28rpx;
+  color: #fa4126;
+  background-color: #fff;
+}
+
 .spu-select {
   height: 80rpx;
   background-color: #fff;

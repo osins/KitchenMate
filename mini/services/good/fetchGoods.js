@@ -1,50 +1,13 @@
 import { config } from '../../config/index';
 
-/** 从后端API获取商品列表 */
-function apiFetchGoodsList(pageIndex = 1, pageSize = 20) {
-  return new Promise((resolve, reject) => {
-    wx.request({
-      url: `${config.apiBaseUrl}/products`,
-      method: 'GET',
-      data: {
-        page: pageIndex,
-        limit: pageSize,
-      },
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const apiData = res.data.data.products || [];
-          
-          // 转换后端数据结构为前端所需格式
-          const goodsList = apiData.map((product) => ({
-            spuId: product.id,
-            thumb: product.imageUrl || '/images/default-product.png',
-            title: product.name,
-            price: product.price,
-            originPrice: product.originalPrice || product.price * 1.2, // 如果没有原价，设置一个默认值
-            tags: product.category ? [product.category.name] : ['推荐'],
-            stock: product.stock,
-            sales: product.sales || 0,
-          }));
-          
-          resolve(goodsList);
-        } else {
-          reject(new Error('获取商品列表失败'));
-        }
-      },
-      fail: (error) => {
-        reject(error);
-      },
-    });
-  });
-}
-
-/** mock数据获取商品列表 */
+/** 获取商品列表 */
 function mockFetchGoodsList(pageIndex = 1, pageSize = 20) {
   const { delay } = require('../_utils/delay');
   const { getGoodsList } = require('../../model/goods');
   return delay().then(() =>
     getGoodsList(pageIndex, pageSize).map((item) => {
       return {
+        id: item.id,
         spuId: item.spuId,
         thumb: item.primaryImage,
         title: item.title,
@@ -61,6 +24,38 @@ export function fetchGoodsList(pageIndex = 1, pageSize = 20) {
   if (config.useMock) {
     return mockFetchGoodsList(pageIndex, pageSize);
   }
-  
-  return apiFetchGoodsList(pageIndex, pageSize);
+  return new Promise((resolve, reject) => {
+    wx.request({
+      url: `${getApp().globalData.baseUrl}/good/list`,
+      method: 'GET',
+      data: {
+        pageIndex: Math.max(Math.abs(pageIndex), 0),  // 将home页面使用的1基索引转换为后端API需要的0基索引
+        pageSize
+      },
+      success: (res) => {
+        if (res.data.code === 200) {
+          // 将API返回的数据转换为前端需要的格式
+          const goodsList = (res.data.data.goodsList || []).map(item => {
+            return {
+              id: item.id,
+              spuId: item.spuId,
+              thumb: item.primaryImage,
+              title: item.title,
+              price: item.minSalePrice,
+              originPrice: item.maxLinePrice,
+              tags: (item.spuTagList || []).map(tag => tag.title),
+            };
+          });
+          resolve(goodsList);
+        } else {
+          console.error('获取商品列表失败:', res.data.message);
+          reject(new Error(res.data.message || '获取商品列表失败'));
+        }
+      },
+      fail: (err) => {
+        console.error('请求失败:', err);
+        reject(err);
+      }
+    });
+  });
 }

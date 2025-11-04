@@ -1,4 +1,5 @@
-import { DeepPartial, EntityTarget, QueryRunner } from "typeorm";
+import { Result } from "src/models/result.entity";
+import { DeepPartial, EntityTarget, QueryRunner, UpdateResult } from "typeorm";
 
 export const execute = async (values:any)=>{
     return await Promise.all(values);
@@ -28,7 +29,11 @@ export const executeSaveObjectWithRunner = async <Entity, EntityLike extends Dee
     entityClass: EntityTarget<Entity>, 
     obj: EntityLike)=>{
     const data = queryRunner.manager.create(entityClass, obj);
-    return queryRunner.manager.save(entityClass, data); 
+    const result = await queryRunner.manager.save(entityClass, data); 
+
+    console.log(`create by obj:`, obj, data, result)
+
+    return result;
 }
 
 
@@ -36,13 +41,50 @@ export const executeWithRunner = async <T, Entity, EntityLike extends DeepPartia
     values:T[] | undefined, 
     queryRunner: QueryRunner, 
     entityClass: EntityTarget<Entity>, 
-    callbackfn: (value: T, index?: number, array?: any[])=>EntityLike):Promise<Entity[]>=>{
+    callbackfn: (value: T, index?: number, array?: any[])=>Promise<EntityLike> | EntityLike):Promise<Entity[]>=>{
     if(values === null || values === undefined || (Array.isArray(values) && values.length==0))
         return [];
 
-    return await executeWithMap(values, ((item, i, records) => {
-          var obj = callbackfn(item, i, records)
-          const data = queryRunner.manager.create(entityClass, obj);
-          queryRunner.manager.save(entityClass, data);
-        }));
+    const results: Entity[] = [];
+    for (let i = 0; i < values.length; i++) {
+        const value = values[i];
+        const obj = await callbackfn(value, i, values);
+        const data = queryRunner.manager.create(entityClass, obj);
+        const saved = await queryRunner.manager.save(entityClass, data);
+        results.push(saved as Entity);
+    }
+    return results;
+}
+
+
+export const executeUpdateWithRunner = async <Entity extends Object>(
+    where: any, 
+    queryRunner: QueryRunner, 
+    entityClass: EntityTarget<Entity>, 
+    partialEntity: DeepPartial<Entity>
+):Promise<any>=>{
+    if(where === null || where === undefined)
+        return []
+
+    return await queryRunner.manager.update(entityClass, where, partialEntity as any);
+}
+
+export const executeUpdateByWheresWithRunner = async <Entity extends Object>(
+    wheres: any[], 
+    queryRunner: QueryRunner, 
+    entityClass: EntityTarget<Entity>, 
+    partialEntity: DeepPartial<Entity>
+):Promise<UpdateResult[] | null>=>{
+    if(wheres === null || wheres === undefined || wheres.length === 0)
+        return null
+
+    const results: UpdateResult[] = [];
+
+    for(const where of wheres){
+        const updateResult = await queryRunner.manager.update(entityClass, where, partialEntity as any);
+        results.push(updateResult);
+    }
+
+    // 返回最后一个更新结果，或者可以根据需要返回汇总结果
+    return results;
 }

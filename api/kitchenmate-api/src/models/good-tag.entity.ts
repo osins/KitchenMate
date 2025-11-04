@@ -8,9 +8,9 @@ export class GoodTag {
   @PrimaryColumn({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
   id: string;
 
-  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true })
   @IsString()
-  tagId: string;
+  tagId: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   @IsString()

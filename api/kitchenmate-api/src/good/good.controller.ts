@@ -42,7 +42,7 @@ export class GoodController {
 
   @Get(':id')
   async findOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
   ): Promise<Result<Good>> {
     const result = await this.goodService.findOne(id);
     return Result.success(result);
@@ -50,7 +50,7 @@ export class GoodController {
 
   @Patch(':id')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateGoodDto: any,
   ): Promise<Result<Good>> {
     const result = await this.goodService.update(id, updateGoodDto);
@@ -58,7 +58,7 @@ export class GoodController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<Result<void>> {
+  async remove(@Param('id') id: string): Promise<Result<void>> {
     await this.goodService.remove(id);
     return Result.successVoid();
   }

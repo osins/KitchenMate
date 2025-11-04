@@ -70,3 +70,7 @@ mini/dist/
 mini/build/
 mini/.nyc_output/
 mini/coverage/
+
+# 忽略特定目录
+doc/
+test/

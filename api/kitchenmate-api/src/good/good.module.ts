@@ -9,6 +9,7 @@ import { GoodSkuPrice } from '../models/good-sku-price-info.entity';
 import { Image } from '../models/image.entity';
 import { GoodService } from './good.service';
 import { GoodController } from './good.controller';
+import { SnowflakeModule } from '../common/snowflake/snowflake.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { GoodController } from './good.controller';
       GoodTag,
       GoodSkuPrice,
       Image
-    ])
+    ]),
+    SnowflakeModule,
   ],
   providers: [GoodService],
   controllers: [GoodController],

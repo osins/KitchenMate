@@ -18,16 +18,16 @@ export class GoodSpecValue {
   @IsString()
   goodId: string;
   
-  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true})
   @IsString()
   skuId: string;
 
-  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, nullable: true })
   @IsOptional()
   @IsString()
   specId: string;
 
-  @Column({ type: 'varchar', length: 50 , unique: true })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH})
   @IsString()
   specValueId: string;
 
@@ -49,10 +49,6 @@ export class GoodSpecValue {
   updatedAt: Date;
 
   @ManyToOne(() => GoodSpec, goodSpec => goodSpec.specValueList)
-  @JoinColumn({ name: 'specId' })
+  @JoinColumn({ name: 'specId', referencedColumnName: 'specId' })
   spec: GoodSpec;
-
-  @OneToMany(() => GoodSku, sku => sku.priceInfo)
-  @JoinColumn({ name: 'skuId', referencedColumnName: 'id'})
-  sku: GoodSku[];
 }

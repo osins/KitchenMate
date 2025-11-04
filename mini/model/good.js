@@ -1601,21 +1601,21 @@ const allGoods = [
         specValueList: [
           {
             specValueId: '127904862175246592',
-            specId: null,
+            specId: '127904861604820480',
             saasId: null,
             specValue: '三件套',
             image: null,
           },
           {
             specValueId: '127904862007474176',
-            specId: null,
+            specId: '127904861604820480',
             saasId: null,
             specValue: '六件套',
             image: null,
           },
           {
             specValueId: '127904861755815680',
-            specId: null,
+            specId: '127904861604820480',
             saasId: null,
             specValue: '八件套',
             image: null,

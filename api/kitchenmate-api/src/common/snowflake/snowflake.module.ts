@@ -3,14 +3,7 @@ import { Module } from '@nestjs/common';
 import { SnowflakeService } from './snowflake.service';
 
 @Module({
-  providers: [
-    {
-      provide: SnowflakeService,
-      useFactory: () => {
-        return new SnowflakeService({ datacenterId: 1, workerId: 3 });
-      },
-    },
-  ],
-  exports: [SnowflakeService],
+  providers: [],
+  exports: [], // 导出 SnowflakeService 供其他模块使用
 })
 export class SnowflakeModule {}

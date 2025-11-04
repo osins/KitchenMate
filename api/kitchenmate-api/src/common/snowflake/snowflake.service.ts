@@ -1,5 +1,8 @@
 // src/common/snowflake/snowflake.service.ts
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+export const DEFAULT_SNOWFLAKE_ID_LENGTH:number = 64
 
 export interface SnowflakeOptions {
   epoch?: number; // 自定义起始时间戳（毫秒）
@@ -32,12 +35,18 @@ export class SnowflakeService implements OnModuleInit {
   private readonly timestampShift =
     this.sequenceBits + this.workerIdBits + this.datacenterIdBits;
 
-  constructor(options?: SnowflakeOptions) {
+  constructor(private readonly config: ConfigService) {
     // 默认 epoch：2020-01-01T00:00:00.000Z
     const defaultEpoch = Date.UTC(2020, 0, 1);
-    this.epoch = BigInt(options?.epoch ?? defaultEpoch);
-    const datacenterId = options?.datacenterId ?? 0;
-    const workerId = options?.workerId ?? 0;
+
+    this.epoch = BigInt(
+      this.config.get<number>('SNOWFLAKE_EPOCH', defaultEpoch)
+    );
+
+    const datacenterId = this.config.get<number>('SNOWFLAKE_DATACENTER_ID', 1);
+    const workerId = this.config.get<number>('SNOWFLAKE_WORKER_ID', 1);
+
+    console.log(`epoch: ${defaultEpoch}, datacenterId: ${datacenterId}, workerId: ${workerId}`);
 
     if (datacenterId < 0 || datacenterId > Number(this.maxDatacenterId)) {
       throw new Error(

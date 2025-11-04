@@ -48,6 +48,7 @@
       </view>
       <view class="goods-intro">{{intro}}</view>
     </view>
+    <view class="spu-tag-list" wx:for="{{details.spuTagList}}" wx:key="index">{{item.title}}</view>
     <view class="spu-select" bindtap="showSkuSelectPopup">
       <view class="label">已选</view>
       <view class="content">

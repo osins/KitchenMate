@@ -33,6 +33,10 @@ Component({
       type: Number,
       value: 1,
     },
+    currentSku:{
+      type: Object,
+      value: {}
+    },
     skuList: {
       type: Array,
       value: [],
@@ -110,6 +114,7 @@ Component({
       const array = [];
       skuList.forEach((item) => {
         (item.specInfo || []).forEach((subItem) => {
+          console.log('subItem', subItem, item)
           if (subItem.specValueId === specValueId && item.quantity > 0) {
             const subArray = [];
             (item.specInfo || []).forEach((specItem) => {
@@ -274,14 +279,26 @@ Component({
           selectSkuImg: '',
         });
       }
+
+      const currentSku = this.properties.skuList.find(sku=>{
+        const specs = sku.specInfo.map(s=>s.specId+":"+s.specValueId)
+        const selectedSpecs = Object.keys(selectedSku).map(s=>s+":"+selectedSku[s])
+        return selectedSpecs.every(s=>specs.includes(s))
+      })
+
+      console.log('selectedSku', selectedSku, currentSku)
+
       this.setData({
         specList,
+        currentSku,
+        selectedSku,
         isAllSelectedSku,
       });
-      this.selectedSku = selectedSku;
+
       this.triggerEvent('change', {
         specList,
         selectedSku,
+        currentSku,
         isAllSelectedSku,
       });
     },

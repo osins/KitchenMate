@@ -13,8 +13,11 @@ import {
   executeOneWithRunner,
   executeSaveObjectWithRunner,
   executeWithMap,
-  executeWithRunner as executeWithQueryRunner,
+  executeWithRunner as executeSaveWithQueryRunner,
+  executeUpdateByWheresWithRunner,
 } from 'src/common/sync.utils';
+import { spec } from 'node:test/reporters';
+import { GoodSkuSpecValue } from 'src/models/good-sku-spec-value.entity';
 
 @Injectable()
 export class GoodService {
@@ -46,12 +49,18 @@ export class GoodService {
         isPutOnSale: data.isPutOnSale ?? 1,
         available: data.available ?? 1,
       };
+      
+      // 创建商品，使用前端模型字段和雪花 ID
+      const savedGood = await executeSaveObjectWithRunner(queryRunner, Good, {
+        ...processedData,
+      });
 
-      // 创建商品，使用前端模型字段
-      const savedGood = await executeSaveObjectWithRunner(queryRunner, Good, processedData);
+      console.log('new good id:', savedGood.id, savedGood)
 
       // 如果有规格信息，则创建规格
       await executeWithMap(data['specList'], async (spec) => {
+        console.log('spec:', spec)
+
         const savedSpec = await executeSaveObjectWithRunner(
           queryRunner,
           GoodSpec,
@@ -63,18 +72,22 @@ export class GoodService {
         );
 
         // 为规格创建规格值
-        await executeWithQueryRunner(
+        await executeSaveWithQueryRunner(
           spec.specValueList,
           queryRunner,
           GoodSpecValue,
-          (value) => ({
-            specValueId: value.specValueId,
-            specId: value.specId,
-            saasId: value.saasId,
-            specValue: value.specValue,
-            image: value.image,
-            specIdNumber: savedSpec.id,
-          }),
+          async (value) => {
+            console.log('spec value:', value.specValue, value, spec)
+
+            return {
+              goodId: savedGood.id,
+              specValueId: value.specValueId,
+              specId: value.specId,
+              saasId: value.saasId,
+              specValue: value.specValue,
+              image: value.image,
+            };
+          },
         );
 
         return savedSpec;
@@ -115,52 +128,46 @@ export class GoodService {
 
           if (savedSku !== undefined && savedSku !== null) {
             // 为SKU创建价格信息
-            await executeWithQueryRunner(
+            await executeSaveWithQueryRunner(
               sku.priceInfo,
               queryRunner,
               GoodSkuPrice,
-              (price) => ({
-                priceType: price.priceType,
-                price: price.price,
-                priceTypeName: price.priceTypeName,
-                skuId: savedSku.id,
-                goodId: savedGood.id,
-              }),
+              (price) => {
+                return {
+                  priceType: price.priceType,
+                  price: price.price,
+                  priceTypeName: price.priceTypeName,
+                  skuId: savedSku.id,
+                  goodId: savedGood.id,
+                };
+              },
             );
 
             // 为SKU创建规格关联
-            await executeWithQueryRunner(
-              sku.specInfo,
-              queryRunner,
-              GoodSpecValue,
-              (spec, i, records) => {
-              const specValue = executeSaveObjectWithRunner(queryRunner, GoodSpecValue, {
-                            goodId: savedGood.id,
-                            skuId: savedSku.id,
-                            specId: spec.specId,
-                            specValue: spec.specValue,
-                            specValueId: spec.specValueId,
-                          });
-
-                return {
-                  goodId: savedGood.id,
-                  skuId: savedSku.id,
-                  specId: spec.specId,
-                  specValue: spec.specValue,
-                  specValueId: spec.specValueId,
-              };
-              },
-            );
+            await executeSaveWithQueryRunner(
+                  sku.specInfo,
+                  queryRunner,
+                  GoodSkuSpecValue,
+                  (spec) => ({
+                    goodId: savedGood.id,
+                    skuId: savedSku.skuId, 
+                    specId: spec.specId,
+                    specValueId: spec.specValueId,
+                    saasId: savedGood.saasId,
+                    specValue: spec.specValue,
+                    image: spec.image,
+                  })
+                );
           }
         }
       }
 
       // 为商品创建图片记录
-      await executeWithQueryRunner(
+      await executeSaveWithQueryRunner(
         data.images,
         queryRunner,
         Image,
-        (url, i) => {
+        async (url, i) => {
           return {
             url: url,
             type: i === 0 ? 'primary' : 'gallery', // 第一张设为主图，其他为相册图
@@ -171,25 +178,29 @@ export class GoodService {
       );
 
       // 如果 desc 是数组，转换为 JSON 字符串
-      await executeWithQueryRunner(data.desc, queryRunner, Image, (url, i) => ({
-        url: url,
-        type: 'desc', // 第一张设为主图，其他为相册图
-        subjectId: savedGood.id,
-        sortOrder: i,
-      }));
+      await executeSaveWithQueryRunner(data.desc, queryRunner, Image, async (url, i) => {
+        return {
+          url: url,
+          type: 'desc', // 第一张设为主图，其他为相册图
+          subjectId: savedGood.id,
+          sortOrder: i,
+        };
+      });
 
       // 如果有标签信息，则创建标签
       console.log('spu tag list:', data['spuTagList']);
-      await executeWithQueryRunner(
+      await executeSaveWithQueryRunner(
         data['spuTagList'],
         queryRunner,
         GoodTag,
-        (tag) => ({
-          tagId: tag.id.toString(),
-          title: tag.title,
-          image: tag.image,
-          goodId: savedGood.id,
-        }),
+        async (tag) => {
+          return {
+            tagId: tag.id===undefined || tag.id===null ? null : tag.toString(),
+            title: tag.title,
+            image: tag.image,
+            goodId: savedGood.id,
+          };
+        },
       );
 
       await queryRunner.commitTransaction();
@@ -233,10 +244,10 @@ export class GoodService {
     };
   }
 
-  async findOne(id: number): Promise<Good> {
+  async findOne(id: string): Promise<Good> {
     const good = await this.goodRepository.findOne({
       where: { id, isPutOnSale: 1 }, // 符合前端模型，只返回上架商品
-      relations: ['specList', 'specList.specValues', 'skuList', 'spuTagList'],
+      relations: ['specList', 'specList.specValueList', 'skuList', 'skuList.specInfo', 'spuTagList'],
     });
 
     if (!good) {
@@ -251,28 +262,6 @@ export class GoodService {
         createdAt: 'ASC',
       },
     });
-
-    good.skuList = await executeWithMap(skus, (async (sku:GoodSku) => {
-      sku.stockInfo = {
-        stockQuantity: sku.stockQuantity,
-        safeStockQuantity: sku.safeStockQuantity,
-        soldQuantity: sku.soldQuantity
-      }
-
-      const skuSpecs = await this.goodSpecValueRepository.find({
-        where: {
-          skuId: In(skus.map((sku) => sku.id)),
-        },
-        order: {
-          createdAt: 'ASC',
-        },
-      });
-      
-      return {
-        ...sku,
-        skuSpecs: skuSpecs,
-      }
-    }));
 
     // 从 image 表中查询 subjectId=goods.id && type in (primary,gallery) 的图片记录赋值给good.images
     const images = await this.imageRepository.find({
@@ -321,7 +310,7 @@ export class GoodService {
     return good;
   }
 
-  async update(id: number, updateData: Partial<Good>): Promise<Good> {
+  async update(id: string, updateData: Partial<Good>): Promise<Good> {
     const good = await this.findOne(id);
 
     // 更新商品基本信息
@@ -334,7 +323,7 @@ export class GoodService {
     return updatedGood;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const good = await this.findOne(id);
 
     // 删除相关的规格、SKU、标签等
@@ -346,10 +335,10 @@ export class GoodService {
     await this.goodRepository.remove(good);
   }
 
-  async findGoodsByIds(ids: number[]): Promise<Good[]> {
+  async findGoodsByIds(ids: string[]): Promise<Good[]> {
     return await this.goodRepository.find({
       where: { id: In(ids), isPutOnSale: 1 },
-      relations: ['specList', 'specList.specValues', 'skus', 'tags'],
+      relations: ['specList', 'specList.specValueList', 'skus', 'tags'],
     });
   }
 

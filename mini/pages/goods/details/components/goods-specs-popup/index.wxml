@@ -25,6 +25,9 @@
             </view>
           </view>
         </view>
+        <view>
+          <view>库存：{{currentSku.quantity}}</view>
+        </view>
       </view>
     </view>
     <view class="popup-sku-body">

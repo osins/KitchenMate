@@ -13,7 +13,7 @@ export class GoodSpec {
   @IsString()
   goodId: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: DEFAULT_SNOWFLAKE_ID_LENGTH, unique: true})
   @IsString()
   specId: string;
 

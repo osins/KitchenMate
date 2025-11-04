@@ -307,19 +307,22 @@ Page({
       const skuArray = [];
       const { skuList, primaryImage, isPutOnSale, minSalePrice, maxSalePrice, maxLinePrice, soldNum } = details;
       skuList.forEach((item) => {
+        console.log('item.stockInfo.stockQuantity', item)
         skuArray.push({
           skuId: item.skuId,
-          quantity: item.stockInfo ? item.stockInfo.stockQuantity : 0,
+          quantity: item.stockQuantity ? item.stockQuantity : 0,
           specInfo: item.specInfo,
         });
       });
       const promotionArray = [];
-      activityList.forEach((item) => {
-        promotionArray.push({
-          tag: item.promotionSubCode === 'MYJ' ? '满减' : '满折',
-          label: '满100元减99.9元',
+      if(!activityList){
+        activityList.forEach((item) => {
+          promotionArray.push({
+            tag: item.promotionSubCode === 'MYJ' ? '满减' : '满折',
+            label: '满100元减99.9元',
+          });
         });
-      });
+      }
       this.setData({
         details,
         activityList,
@@ -341,6 +344,9 @@ Page({
       const code = 'Success';
       const data = await getGoodsDetailsCommentList();
       const { homePageComments } = data;
+      if(!homePageComments)
+        return;
+
       if (code.toUpperCase() === 'SUCCESS') {
         const nextState = {
           commentsList: homePageComments.map((item) => {

@@ -32,7 +32,7 @@ export class CategoryService {
     return categories;
   }
 
-  private async createCategoryRecursiveInternal(categoryData: any, parentId?: number): Promise<Category> {
+  private async createCategoryRecursiveInternal(categoryData: any, parentId?: string): Promise<Category> {
     // 检查是否传入了数组，如果是，则只处理第一个元素
     // 这个检查确保我们处理的是单个对象而不是数组
     if (Array.isArray(categoryData)) {
@@ -81,7 +81,7 @@ export class CategoryService {
     });
 
     // 构建树形结构
-    const categoryMap = new Map<number, Category>();
+    const categoryMap = new Map<string, Category>();
     const rootCategories: Category[] = [];
 
     // 首先创建所有分类的映射
@@ -125,7 +125,7 @@ export class CategoryService {
     });
   }
 
-  async findOne(id: number): Promise<Category> {
+  async findOne(id: string): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: { 
         id, 
@@ -151,13 +151,13 @@ export class CategoryService {
     return category;
   }
 
-  async update(id: number, updateData: Partial<Category>): Promise<Category> {
+  async update(id: string, updateData: Partial<Category>): Promise<Category> {
     const category = await this.findOne(id);
     Object.assign(category, updateData, { updatedAt: new Date() });
     return await this.categoryRepository.save(category);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const category = await this.findOne(id);
     await this.categoryRepository.remove(category);
   }
@@ -168,7 +168,7 @@ export class CategoryService {
   }
 
   // 根据父ID查找子分类
-  async findChildrenByParentId(parentId: number): Promise<Category[]> {
+  async findChildrenByParentId(parentId: string): Promise<Category[]> {
     return await this.categoryRepository.find({
       where: { 
         isActive: true,
